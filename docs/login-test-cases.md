@@ -65,3 +65,13 @@
 - **Expected result** · The alert and its dismissal button disappear. The username field, password field, and **Login** button remain available.
 - **Actual result** · The alert and dismissal button disappeared. Both fields and the **Login** button remained visible.
 - **Execution status** · Passed
+
+### LOGIN-007 · Reject login with an empty username and populated password
+
+- **Priority** · Medium
+- **Preconditions** · User is signed out and on the login page.
+- **Test data** · Login is blank, password `secret_sauce`.
+- **Steps** · Leave login field blank, fill password field and click **Login**.
+- **Expected result** · The user remains on the login page and sees Epic sadface: Username is required.
+- **Actual result** · The application displays Epic sadface: Username is required.
+- **Execution status** · Passed, once both expected conditions are confirmed.
