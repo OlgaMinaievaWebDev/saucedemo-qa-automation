@@ -150,3 +150,28 @@ test('CART-003, Remove one product from a cart with two items', async ({
     '1',
   );
 });
+
+test('CART-004,Remove the last cart item', async ({ page }) => {
+  const bikeCart = page.locator('[data-test="inventory-item"]').filter({
+    hasText: 'Sauce Labs Bike Light',
+  });
+  await bikeCart.getByRole('button', { name: 'add to cart' }).click();
+  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
+    '1',
+  );
+  await page.locator('[data-test="shopping-cart-link"]').click();
+
+  const bikeCartItem = page.locator('[data-test="inventory-item"]');
+  await expect(
+    bikeCartItem.locator('[data-test="inventory-item-name"]'),
+  ).toHaveText(['Sauce Labs Bike Light']);
+
+  await bikeCartItem.getByRole('button', { name: 'remove' }).click();
+
+  await expect(bikeCartItem).toHaveCount(0);
+
+  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveCount(
+    0,
+  );
+  await expect(page).toHaveURL('/cart.html');
+});
