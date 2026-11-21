@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { InventoryPage } from '../pages/InventoryPage';
 import { CartPage } from '../pages/CartPage';
+import { HeaderComponent } from '../components/HeaderComponent';
 import { loginHelper } from '../helpers/auth';
 import { users } from '../test-data/users';
 import { products } from '../test-data/products';
@@ -13,19 +14,16 @@ test.beforeEach(async ({ page }) => {
 test('CART-001, Add one product and open the cart', async ({ page }) => {
   const inventoryPage = new InventoryPage(page);
   const cartPage = new CartPage(page);
+  const header = new HeaderComponent(page);
   const backpackPrice = await inventoryPage.getProductPrice(
     products.backpack.name,
   );
   await inventoryPage.addProductToCart(products.backpack.name);
 
-  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
-    '1',
-  );
-
-  await inventoryPage.openCart();
+  await expect(header.cartBadge).toHaveText('1');
+  await header.openCart();
 
   const backpackCartItem = cartPage.getCartItem(products.backpack.name);
-
   await expect(
     backpackCartItem.locator('[data-test="inventory-item-name"]'),
   ).toHaveText(products.backpack.name);
@@ -48,6 +46,7 @@ test('CART-001, Add one product and open the cart', async ({ page }) => {
 test('CART-002,Add two different products', async ({ page }) => {
   const inventoryPage = new InventoryPage(page);
   const cartPage = new CartPage(page);
+  const header = new HeaderComponent(page);
   const backpackPrice = await inventoryPage.getProductPrice(
     products.backpack.name,
   );
@@ -60,11 +59,9 @@ test('CART-002,Add two different products', async ({ page }) => {
 
   await inventoryPage.addProductToCart(products.bikeLight.name);
 
-  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
-    '2',
-  );
+  await expect(header.cartBadge).toHaveText('2');
 
-  await inventoryPage.openCart();
+  await header.openCart();
 
   const backpackCartItem = cartPage.getCartItem(products.backpack.name);
 
@@ -108,14 +105,13 @@ test('CART-003, Remove one product from a cart with two items', async ({
 }) => {
   const inventoryPage = new InventoryPage(page);
   const cartPage = new CartPage(page);
+  const header = new HeaderComponent(page);
   await inventoryPage.addProductToCart(products.backpack.name);
   await inventoryPage.addProductToCart(products.bikeLight.name);
 
-  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
-    '2',
-  );
+  await expect(header.cartBadge).toHaveText('2');
 
-  await inventoryPage.openCart();
+  await header.openCart();
 
   const backpackCardItem = cartPage.getCartItem(products.backpack.name);
 
@@ -129,19 +125,16 @@ test('CART-003, Remove one product from a cart with two items', async ({
   await expect(bikeCardItem.locator('[data-test="item-quantity"]')).toHaveText(
     '1',
   );
-  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
-    '1',
-  );
+  await expect(header.cartBadge).toHaveText('1');
 });
 
 test('CART-004,Remove the last cart item', async ({ page }) => {
   const inventoryPage = new InventoryPage(page);
   const cartPage = new CartPage(page);
+  const header = new HeaderComponent(page);
   await inventoryPage.addProductToCart(products.bikeLight.name);
-  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
-    '1',
-  );
-  await inventoryPage.openCart();
+  await expect(header.cartBadge).toHaveText('1');
+  await header.openCart();
 
   const bikeCartItem = cartPage.getCartItem(products.bikeLight.name);
   await expect(
@@ -152,9 +145,7 @@ test('CART-004,Remove the last cart item', async ({ page }) => {
 
   await expect(bikeCartItem).toHaveCount(0);
 
-  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveCount(
-    0,
-  );
+  await expect(header.cartBadge).toHaveCount(0);
   await expect(page).toHaveURL('/cart.html');
 });
 
@@ -163,12 +154,11 @@ test('CART-005,Return to Products and reopen a populated cart', async ({
 }) => {
   const inventoryPage = new InventoryPage(page);
   const cartPage = new CartPage(page);
+  const header = new HeaderComponent(page);
   const backpackCard = inventoryPage.getProductCard(products.backpack.name);
   await inventoryPage.addProductToCart(products.backpack.name);
-  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
-    '1',
-  );
-  await inventoryPage.openCart();
+  await expect(header.cartBadge).toHaveText('1');
+  await header.openCart();
   const backpackCartItem = cartPage.getCartItem(products.backpack.name);
   await expect(
     backpackCartItem.locator('[data-test="inventory-item-name"]'),
@@ -181,10 +171,8 @@ test('CART-005,Return to Products and reopen a populated cart', async ({
   await expect(backpackCard.getByRole('button', { name: 'remove' })).toHaveText(
     'Remove',
   );
-  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
-    '1',
-  );
-  await inventoryPage.openCart();
+  await expect(header.cartBadge).toHaveText('1');
+  await header.openCart();
   await expect(page.locator('[data-test="inventory-item"]')).toHaveCount(1);
   await expect(backpackCartItem).toHaveCount(1);
   await expect(
@@ -197,10 +185,9 @@ test('CART-006,Inspect quantity and duplicate-add controls', async ({
 }) => {
   const inventoryPage = new InventoryPage(page);
   const cartPage = new CartPage(page);
+  const header = new HeaderComponent(page);
   await inventoryPage.addProductToCart(products.backpack.name);
-  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
-    '1',
-  );
+  await expect(header.cartBadge).toHaveText('1');
   const backpackCard = inventoryPage.getProductCard(products.backpack.name);
   await expect(backpackCard.getByRole('button', { name: 'remove' })).toHaveText(
     'Remove',
@@ -208,7 +195,7 @@ test('CART-006,Inspect quantity and duplicate-add controls', async ({
   await expect(
     backpackCard.getByRole('button', { name: 'add to cart' }),
   ).not.toBeVisible();
-  await inventoryPage.openCart();
+  await header.openCart();
   await expect(page.locator('[data-test="inventory-item"]')).toHaveCount(1);
   const backpackCardItem = cartPage.getCartItem(products.backpack.name);
   await expect(
@@ -237,7 +224,5 @@ test('CART-006,Inspect quantity and duplicate-add controls', async ({
   await expect(
     page.getByRole('button', { name: 'Add to cart', exact: true }),
   ).toHaveCount(0);
-  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
-    '1',
-  );
+  await expect(header.cartBadge).toHaveText('1');
 });

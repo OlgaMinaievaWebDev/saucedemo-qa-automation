@@ -28,8 +28,4 @@ export class InventoryPage {
       .locator('[data-test="inventory-item-price"]')
       .innerText();
   }
-
-  async openCart() {
-    await this.page.locator('[data-test="shopping-cart-link"]').click();
-  }
 }
