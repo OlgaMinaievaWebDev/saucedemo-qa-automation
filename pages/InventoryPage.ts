@@ -8,7 +8,8 @@ export class InventoryPage {
     this.page = page;
     this.card = page.locator('[data-test="inventory-item"]');
   }
-  private getProductCard(productName: string): Locator {
+
+  getProductCard(productName: string): Locator {
     return this.card.filter({ hasText: productName });
   }
 
@@ -22,7 +23,7 @@ export class InventoryPage {
   }
 
   async getProductPrice(productName: string): Promise<string> {
-   const productCard = this.getProductCard(productName);
+    const productCard = this.getProductCard(productName);
     return await productCard
       .locator('[data-test="inventory-item-price"]')
       .innerText();

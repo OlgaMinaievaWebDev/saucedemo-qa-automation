@@ -49,7 +49,7 @@ test('CART-002,Add two different products', async ({ page }) => {
   const inventoryPage = new InventoryPage(page);
   const cartPage = new CartPage(page);
   const backpackPrice = await inventoryPage.getProductPrice(
-    products.backpack.name
+    products.backpack.name,
   );
 
   await inventoryPage.addProductToCart(products.backpack.name);
@@ -156,4 +156,38 @@ test('CART-004,Remove the last cart item', async ({ page }) => {
     0,
   );
   await expect(page).toHaveURL('/cart.html');
+});
+
+test('CART-005,Return to Products and reopen a populated cart', async ({
+  page,
+}) => {
+  const inventoryPage = new InventoryPage(page);
+  const cartPage = new CartPage(page);
+  const backpackCard = inventoryPage.getProductCard(products.backpack.name);
+  await inventoryPage.addProductToCart(products.backpack.name);
+  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
+    '1',
+  );
+  await inventoryPage.openCart();
+  const backpackCartItem = cartPage.getCartItem(products.backpack.name);
+  await expect(
+    backpackCartItem.locator('[data-test="inventory-item-name"]'),
+  ).toHaveText(products.backpack.name);
+  await expect(
+    backpackCartItem.locator('[data-test="item-quantity"]'),
+  ).toHaveText('1');
+  await cartPage.continueShopping();
+  await expect(page).toHaveURL('/inventory.html');
+  await expect(backpackCard.getByRole('button', { name: 'remove' })).toHaveText(
+    'Remove',
+  );
+  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
+    '1',
+  );
+  await inventoryPage.openCart();
+  await expect(page.locator('[data-test="inventory-item"]')).toHaveCount(1);
+  await expect(backpackCartItem).toHaveCount(1);
+  await expect(
+    backpackCartItem.locator('[data-test="item-quantity"]'),
+  ).toHaveText('1');
 });

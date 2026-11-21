@@ -19,4 +19,12 @@ export class CartPage {
       })
       .click();
   }
+
+  async continueShopping() {
+      await this.page
+        .getByRole('button', {
+          name: 'Continue Shopping',
+        })
+        .click();
+  }
 }
