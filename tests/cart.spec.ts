@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { InventoryPage } from '../pages/InventoryPage';
+import { CartPage } from '../pages/CartPage';
 import { loginHelper } from '../helpers/auth';
 import { users } from '../test-data/users';
+import { products } from '../test-data/products';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -8,29 +11,24 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('CART-001, Add one product and open the cart', async ({ page }) => {
-  const backpackCard = page
-    .locator('[data-test="inventory-item"]')
-    .filter({ hasText: 'Sauce Labs Backpack' });
-
-  const backpackPrice = await backpackCard
-    .locator('[data-test="inventory-item-price"]')
-    .innerText();
-
-  await backpackCard.getByRole('button', { name: 'Add to cart' }).click();
+  const inventoryPage = new InventoryPage(page);
+  const cartPage = new CartPage(page);
+  const backpackPrice = await inventoryPage.getProductPrice(
+    products.backpack.name,
+  );
+  await inventoryPage.addProductToCart(products.backpack.name);
 
   await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
     '1',
   );
 
-  await page.locator('[data-test="shopping-cart-link"]').click();
+  await inventoryPage.openCart();
 
-  const backpackCartItem = page
-    .locator('[data-test="inventory-item"]')
-    .filter({ hasText: 'Sauce Labs Backpack' });
+  const backpackCartItem = cartPage.getCartItem(products.backpack.name);
 
   await expect(
     backpackCartItem.locator('[data-test="inventory-item-name"]'),
-  ).toHaveText('Sauce Labs Backpack');
+  ).toHaveText(products.backpack.name);
 
   await expect(
     backpackCartItem.locator('[data-test="item-quantity"]'),
@@ -48,35 +46,27 @@ test('CART-001, Add one product and open the cart', async ({ page }) => {
 });
 
 test('CART-002,Add two different products', async ({ page }) => {
-  const backpackCard = page
-    .locator('[data-test="inventory-item"]')
-    .filter({ hasText: 'Sauce Labs Backpack' });
+  const inventoryPage = new InventoryPage(page);
+  const cartPage = new CartPage(page);
+  const backpackPrice = await inventoryPage.getProductPrice(
+    products.backpack.name
+  );
 
-  const backpackPrice = await backpackCard
-    .locator('[data-test="inventory-item-price"]')
-    .innerText();
+  await inventoryPage.addProductToCart(products.backpack.name);
 
-  await backpackCard.getByRole('button', { name: 'Add to cart' }).click();
+  const bikeLightPrice = await inventoryPage.getProductPrice(
+    products.bikeLight.name,
+  );
 
-  const bikeLightCard = page
-    .locator('[data-test="inventory-item"]')
-    .filter({ hasText: 'Sauce Labs Bike Light' });
+  await inventoryPage.addProductToCart(products.bikeLight.name);
 
-  const bikeLightPrice = await bikeLightCard
-    .locator('[data-test="inventory-item-price"]')
-    .innerText();
+  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
+    '2',
+  );
 
-  await bikeLightCard.getByRole('button', { name: 'Add to cart' }).click();
+  await inventoryPage.openCart();
 
-  await expect(
-    page.getByRole('button', { name: /^Cart, 2 items?$/i }),
-  ).toBeVisible();
-
-  await page.locator('[data-test="shopping-cart-link"]').click();
-
-  const backpackCartItem = page
-    .locator('[data-test="inventory-item"]')
-    .filter({ hasText: 'Sauce Labs Backpack' });
+  const backpackCartItem = cartPage.getCartItem(products.backpack.name);
 
   await expect(
     backpackCartItem.locator('[data-test="item-quantity"]'),
@@ -86,9 +76,11 @@ test('CART-002,Add two different products', async ({ page }) => {
     backpackCartItem.locator('[data-test="inventory-item-price"]'),
   ).toHaveText(backpackPrice);
 
-  const bikeLightCartItem = page
-    .locator('[data-test="inventory-item"]')
-    .filter({ hasText: 'Sauce Labs Bike Light ' });
+  await expect(
+    backpackCartItem.locator('[data-test="inventory-item-name"]'),
+  ).toHaveText(products.backpack.name);
+
+  const bikeLightCartItem = cartPage.getCartItem(products.bikeLight.name);
 
   await expect(
     bikeLightCartItem.locator('[data-test="inventory-item-price"]'),
@@ -97,6 +89,11 @@ test('CART-002,Add two different products', async ({ page }) => {
   await expect(
     bikeLightCartItem.locator('[data-test="item-quantity"]'),
   ).toHaveText('1');
+  await expect(
+    bikeLightCartItem.locator('[data-test="inventory-item-name"]'),
+  ).toHaveText(products.bikeLight.name);
+
+  await expect(page.locator('[data-test="inventory-item"]')).toHaveCount(2);
 
   await expect(
     page.locator('[data-test="remove-sauce-labs-backpack"]'),
@@ -109,40 +106,26 @@ test('CART-002,Add two different products', async ({ page }) => {
 test('CART-003, Remove one product from a cart with two items', async ({
   page,
 }) => {
-  const backpackCard = page
-    .locator('[data-test="inventory-item"]')
-    .filter({ hasText: 'Sauce Labs Backpack' });
-
-  await backpackCard.getByRole('button', { name: 'Add to cart' }).click();
-
-  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
-    '1',
-  );
-
-  const bikeCard = page
-    .locator('[data-test="inventory-item"]')
-    .filter({ hasText: 'Sauce Labs Bike Light' });
-
-  await bikeCard.getByRole('button', { name: 'Add to cart' }).click();
+  const inventoryPage = new InventoryPage(page);
+  const cartPage = new CartPage(page);
+  await inventoryPage.addProductToCart(products.backpack.name);
+  await inventoryPage.addProductToCart(products.bikeLight.name);
 
   await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
     '2',
   );
 
-  await page.locator('[data-test="shopping-cart-link"]').click();
+  await inventoryPage.openCart();
 
-  const backpackCardItem = page
-    .locator('[data-test="inventory-item"]')
-    .filter({ hasText: 'Sauce Labs Backpack' });
+  const backpackCardItem = cartPage.getCartItem(products.backpack.name);
 
-  const bikeCardItem = page
-    .locator('[data-test="inventory-item"]')
-    .filter({ hasText: 'Sauce Labs Bike Light' });
+  const bikeCardItem = cartPage.getCartItem(products.bikeLight.name);
 
-  await backpackCardItem.getByRole('button', { name: 'remove' }).click();
+  await cartPage.removeProduct(products.backpack.name);
 
   await expect(backpackCardItem).toHaveCount(0);
   await expect(page.locator('[data-test="inventory-item"]')).toHaveCount(1);
+  await expect(bikeCardItem).toHaveCount(1);
   await expect(bikeCardItem.locator('[data-test="item-quantity"]')).toHaveText(
     '1',
   );
@@ -152,21 +135,20 @@ test('CART-003, Remove one product from a cart with two items', async ({
 });
 
 test('CART-004,Remove the last cart item', async ({ page }) => {
-  const bikeCart = page.locator('[data-test="inventory-item"]').filter({
-    hasText: 'Sauce Labs Bike Light',
-  });
-  await bikeCart.getByRole('button', { name: 'add to cart' }).click();
+  const inventoryPage = new InventoryPage(page);
+  const cartPage = new CartPage(page);
+  await inventoryPage.addProductToCart(products.bikeLight.name);
   await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
     '1',
   );
-  await page.locator('[data-test="shopping-cart-link"]').click();
+  await inventoryPage.openCart();
 
-  const bikeCartItem = page.locator('[data-test="inventory-item"]');
+  const bikeCartItem = cartPage.getCartItem(products.bikeLight.name);
   await expect(
     bikeCartItem.locator('[data-test="inventory-item-name"]'),
-  ).toHaveText(['Sauce Labs Bike Light']);
+  ).toHaveText(products.bikeLight.name);
 
-  await bikeCartItem.getByRole('button', { name: 'remove' }).click();
+  await cartPage.removeProduct(products.bikeLight.name);
 
   await expect(bikeCartItem).toHaveCount(0);
 
