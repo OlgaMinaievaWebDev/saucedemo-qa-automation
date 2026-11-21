@@ -191,3 +191,53 @@ test('CART-005,Return to Products and reopen a populated cart', async ({
     backpackCartItem.locator('[data-test="item-quantity"]'),
   ).toHaveText('1');
 });
+
+test('CART-006,Inspect quantity and duplicate-add controls', async ({
+  page,
+}) => {
+  const inventoryPage = new InventoryPage(page);
+  const cartPage = new CartPage(page);
+  await inventoryPage.addProductToCart(products.backpack.name);
+  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
+    '1',
+  );
+  const backpackCard = inventoryPage.getProductCard(products.backpack.name);
+  await expect(backpackCard.getByRole('button', { name: 'remove' })).toHaveText(
+    'Remove',
+  );
+  await expect(
+    backpackCard.getByRole('button', { name: 'add to cart' }),
+  ).not.toBeVisible();
+  await inventoryPage.openCart();
+  await expect(page.locator('[data-test="inventory-item"]')).toHaveCount(1);
+  const backpackCardItem = cartPage.getCartItem(products.backpack.name);
+  await expect(
+    backpackCardItem.locator('[data-test="item-quantity"]'),
+  ).toHaveText('1');
+  await expect(
+    backpackCardItem.locator(
+      'input, textarea, select, [contenteditable="true"]',
+    ),
+  ).toHaveCount(0);
+  await expect(
+    backpackCardItem.locator('[data-test="inventory-item-name"]'),
+  ).toHaveText(products.backpack.name);
+
+  await expect(
+    backpackCardItem.getByRole('button', { name: 'Remove' }),
+  ).toBeVisible();
+  await backpackCardItem.locator('[data-test="inventory-item-name"]').click();
+  await expect(page).toHaveURL(/\/inventory-item\.html\?id=\d+$/);
+
+  await expect(page.locator('[data-test="inventory-item-name"]')).toHaveText(
+    products.backpack.name,
+  );
+
+  await expect(page.locator('[data-test="remove"]')).toHaveText('Remove');
+  await expect(
+    page.getByRole('button', { name: 'Add to cart', exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator('[data-test="shopping-cart-badge"]')).toHaveText(
+    '1',
+  );
+});
