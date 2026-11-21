@@ -1,34 +1,72 @@
-# SauceDemo Login Test Automation
+# SauceDemo QA Automation
 
-This QA portfolio project uses **Playwright and TypeScript** to test the login page of [SauceDemo](https://www.saucedemo.com/), a public demo store. It covers successful sign-in, rejected credentials, required fields, and error dismissal.
+A QA portfolio project using **Playwright and TypeScript** to test [SauceDemo](https://www.saucedemo.com/), a public demo store. It combines exploratory testing, written test cases, and automated checks for login and the shopping cart.
 
-**Verified result:** All six cases passed in Chromium, Firefox, and WebKit, for **18 passing test runs**.
+**Latest local verification — November 21, 2026:** All **13 automated cases passed in Chromium**. TypeScript validation passed.
 
-## What the tests cover
+## What is tested
 
-| Case | Scenario | Expected behavior |
+| Area | Cases | Coverage |
 | --- | --- | --- |
-| LOGIN-001 | Valid credentials | Opens the Products page. |
-| LOGIN-002 | Incorrect password | Shows a credential error and stays on the login page. |
-| LOGIN-003 | Locked-out user | Shows a lockout error even with the correct password. |
-| LOGIN-004 | Both fields empty | Shows that the username is required. |
-| LOGIN-005 | Password empty | Shows that the password is required. |
-| LOGIN-006 | Dismiss an error | Hides the error and its dismiss button while keeping the login form visible. |
+| Login | LOGIN-001–007 | Valid sign-in, incorrect password, locked-out user, empty fields, and dismissing an error. |
+| Cart | CART-001–005 | Adding one or two products, checking names, quantities and prices, removing products, and keeping cart contents while continuing shopping. |
+| Cart controls | CART-006 | Quantity display, absence of standard input fields, and add/remove controls across Products, Cart, and product details. |
 
-I explored the login page with Codex and Playwright browser controls, recorded the observed results, and then automated each case. The tests start on the login page and share a small helper for entering credentials and submitting the form. Each test keeps its own assertions so its expected behavior is easy to see.
+The manual cart plan also includes cases that have not yet been automated. Checkout automation is planned.
 
-- [Test cases and exploratory results](docs/login-test-cases.md)
-- [Automated login tests](tests/login.spec.ts)
-- [GitHub Actions workflow](.github/workflows/playwright.yml) for running the suite on pushes and pull requests targeting the main branches
+## How the framework is organized
 
-## Run the tests
+- **Tests** keep each scenario's steps and expected results readable.
+- **Page objects** handle reusable actions on Products and Cart.
+- **Header component** handles opening the cart and exposes the cart badge for assertions.
+- **Test data** stores the demo users and product names in one place.
+- **Login helper** shares the sign-in steps.
 
-With Node.js and npm installed, run these commands from the project folder:
+Each test starts in a fresh browser context. Cart tests sign in before arranging their own cart contents, so they can run independently.
+
+## Test design and findings
+
+I used AI-assisted browser exploration with Codex and Playwright to investigate the application and document observed behavior. Cart cases cover state changes such as empty → one item → multiple items and back to empty, along with representative single-product and multi-product scenarios.
+
+- [Login test cases](docs/login-test-cases.md)
+- [Cart test cases and open requirements](docs/cart-test-cases.md)
+- [Potential defect — empty-cart checkout](docs/bug-reports/BUG-001-empty-cart-checkout.md)
+
+The empty-cart checkout report separates the tester's observation from a proposed requirement. The expected business rule still needs confirmation.
+
+## Run locally
+
+Install Node.js and npm, then run these commands from the project folder:
 
 ```bash
 npm ci
-npx playwright install
+npx playwright install chromium
 npx playwright test
 ```
 
-Playwright runs all six cases in the three configured browsers. To run only Chromium, use `npx playwright test --project=chromium`. Open the HTML report with `npx playwright show-report`, or check TypeScript with `npm run typecheck`.
+The current configuration runs **Chromium only**, both locally and in GitHub Actions.
+
+| Task | Command |
+| --- | --- |
+| Run all tests | `npx playwright test` |
+| Run login tests | `npx playwright test tests/login.spec.ts` |
+| Run cart tests | `npx playwright test tests/cart.spec.ts` |
+| Watch the browser | `npx playwright test --headed` |
+| Check TypeScript | `npm run typecheck` |
+| Open the HTML report | `npx playwright show-report` |
+
+## GitHub Actions
+
+The [workflow](.github/workflows/playwright.yml) runs on pushes and pull requests targeting `main` or `master`. It installs dependencies and browsers, runs the tests, and uploads the HTML report. CI retries failed tests up to twice, with a trace recorded on the first retry.
+
+## Project files
+
+| Location | Purpose |
+| --- | --- |
+| `tests/` | Login and cart scenarios |
+| `pages/` | InventoryPage and CartPage |
+| `components/` | Shared HeaderComponent |
+| `helpers/` | Login helper |
+| `test-data/` | Demo users and products |
+| `docs/` | Manual test cases and bug reports |
+| `playwright.config.ts` | Browser, base URL, reporting, and retry settings |
