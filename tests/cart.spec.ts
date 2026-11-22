@@ -1,7 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { InventoryPage } from '../pages/InventoryPage';
-import { CartPage } from '../pages/CartPage';
-import { HeaderComponent } from '../components/HeaderComponent';
+import { test } from '../fixtures/test-fixtures';
+import { expect } from '@playwright/test';
 import { loginHelper } from '../helpers/auth';
 import { users } from '../test-data/users';
 import { products } from '../test-data/products';
@@ -11,10 +9,12 @@ test.beforeEach(async ({ page }) => {
   await loginHelper(page, users.standard.username, users.standard.password);
 });
 
-test('CART-001, Add one product and open the cart', async ({ page }) => {
-  const inventoryPage = new InventoryPage(page);
-  const cartPage = new CartPage(page);
-  const header = new HeaderComponent(page);
+test('CART-001, Add one product and open the cart', async ({
+  page,
+  inventoryPage,
+  cartPage,
+  header,
+}) => {
   const backpackPrice = await inventoryPage.getProductPrice(
     products.backpack.name,
   );
@@ -43,10 +43,13 @@ test('CART-001, Add one product and open the cart', async ({ page }) => {
   await expect(page).toHaveURL(/\/cart\.html$/);
 });
 
-test('CART-002,Add two different products', async ({ page }) => {
-  const inventoryPage = new InventoryPage(page);
-  const cartPage = new CartPage(page);
-  const header = new HeaderComponent(page);
+test('CART-002,Add two different products', async ({
+  page,
+  inventoryPage,
+  cartPage,
+  header,
+}) => {
+  await expect(header.cartBadge).toHaveCount(0);
   const backpackPrice = await inventoryPage.getProductPrice(
     products.backpack.name,
   );
@@ -102,10 +105,10 @@ test('CART-002,Add two different products', async ({ page }) => {
 
 test('CART-003, Remove one product from a cart with two items', async ({
   page,
+  inventoryPage,
+  cartPage,
+  header,
 }) => {
-  const inventoryPage = new InventoryPage(page);
-  const cartPage = new CartPage(page);
-  const header = new HeaderComponent(page);
   await inventoryPage.addProductToCart(products.backpack.name);
   await inventoryPage.addProductToCart(products.bikeLight.name);
 
@@ -128,10 +131,12 @@ test('CART-003, Remove one product from a cart with two items', async ({
   await expect(header.cartBadge).toHaveText('1');
 });
 
-test('CART-004,Remove the last cart item', async ({ page }) => {
-  const inventoryPage = new InventoryPage(page);
-  const cartPage = new CartPage(page);
-  const header = new HeaderComponent(page);
+test('CART-004,Remove the last cart item', async ({
+  page,
+  inventoryPage,
+  cartPage,
+  header,
+}) => {
   await inventoryPage.addProductToCart(products.bikeLight.name);
   await expect(header.cartBadge).toHaveText('1');
   await header.openCart();
@@ -151,10 +156,10 @@ test('CART-004,Remove the last cart item', async ({ page }) => {
 
 test('CART-005,Return to Products and reopen a populated cart', async ({
   page,
+  inventoryPage,
+  cartPage,
+  header,
 }) => {
-  const inventoryPage = new InventoryPage(page);
-  const cartPage = new CartPage(page);
-  const header = new HeaderComponent(page);
   const backpackCard = inventoryPage.getProductCard(products.backpack.name);
   await inventoryPage.addProductToCart(products.backpack.name);
   await expect(header.cartBadge).toHaveText('1');
@@ -182,10 +187,10 @@ test('CART-005,Return to Products and reopen a populated cart', async ({
 
 test('CART-006,Inspect quantity and duplicate-add controls', async ({
   page,
+  inventoryPage,
+  cartPage,
+  header,
 }) => {
-  const inventoryPage = new InventoryPage(page);
-  const cartPage = new CartPage(page);
-  const header = new HeaderComponent(page);
   await inventoryPage.addProductToCart(products.backpack.name);
   await expect(header.cartBadge).toHaveText('1');
   const backpackCard = inventoryPage.getProductCard(products.backpack.name);
