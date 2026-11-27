@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   await loginHelper(page, users.standard.username, users.standard.password);
 });
 
-test('CHECKOUT-001 — Complete checkout with one product', async ({
+test('CHECKOUT-001, Complete checkout with one product', async ({
   page,
   inventoryPage,
   cartPage,
@@ -82,4 +82,63 @@ test('CHECKOUT-001 — Complete checkout with one product', async ({
   await header.openCart();
   await expect(page).toHaveURL('/cart.html');
   await expect(page.locator('[data-test="inventory-item"]')).toHaveCount(0);
+});
+
+test('CHECKOUT-002, Submit an entirely empty customer-information form', async ({
+  page,
+  inventoryPage,
+  header,
+  cartPage,
+  checkout,
+}) => {
+  await inventoryPage.addProductToCart(products.backpack.name);
+  await header.openCart();
+  await expect(page).toHaveURL('/cart.html');
+  await cartPage.checkout();
+  await expect(page).toHaveURL('/checkout-step-one.html');
+  await checkout.continueToOverview();
+
+  await expect(checkout.errorMessage).toHaveText(
+    'Error: First Name is required',
+  );
+  await expect(page).toHaveURL('/checkout-step-one.html');
+  await expect(header.cartBadge).toHaveText('1');
+});
+
+test('CHECKOUT-003, Submit without a first name, then correct it', async ({
+  page,
+  inventoryPage,
+  header,
+  cartPage,
+  checkout,
+  overview,
+}) => {
+  await inventoryPage.addProductToCart(products.backpack.name);
+  await header.openCart();
+  await expect(page).toHaveURL('/cart.html');
+  await cartPage.checkout();
+  await expect(page).toHaveURL('/checkout-step-one.html');
+  await checkout.fillCustomerInformation({
+    firstName: '',
+    lastName: customer.lastName,
+    postalCode: customer.postalCode,
+  });
+  await checkout.continueToOverview();
+  await expect(checkout.errorMessage).toHaveText(
+    'Error: First Name is required',
+  );
+  await expect(header.cartBadge).toHaveText('1');
+  await expect(page).toHaveURL('/checkout-step-one.html');
+  await expect(checkout.lastName).toHaveValue(customer.lastName);
+  await expect(checkout.postalCode).toHaveValue(customer.postalCode);
+  await checkout.fillFirstName(customer.firstName);
+  await checkout.continueToOverview();
+  await expect(page).toHaveURL('/checkout-step-two.html');
+  await expect(overview.productRows).toHaveCount(1);
+  await expect(
+    overview.productRows.locator('[data-test="inventory-item-name"]'),
+  ).toHaveText(products.backpack.name);
+  await expect(
+    overview.productRows.locator('[data-test="item-quantity"]'),
+  ).toHaveText('1');
 });
