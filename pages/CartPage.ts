@@ -21,10 +21,18 @@ export class CartPage {
   }
 
   async continueShopping() {
-      await this.page
-        .getByRole('button', {
-          name: 'Continue Shopping',
-        })
-        .click();
+    await this.page
+      .getByRole('button', {
+        name: 'Continue Shopping',
+      })
+      .click();
+  }
+
+  async checkout() {
+    await this.page
+      .getByRole('button', {
+        name: 'checkout',
+      })
+      .click();
   }
 }

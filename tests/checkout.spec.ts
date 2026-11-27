@@ -16,6 +16,9 @@ test('CHECKOUT-001 — Complete checkout with one product', async ({
   inventoryPage,
   cartPage,
   header,
+  checkout,
+  overview,
+  complete,
 }) => {
   const backpackPrice = await inventoryPage.getProductPrice(
     products.backpack.name,
@@ -35,34 +38,25 @@ test('CHECKOUT-001 — Complete checkout with one product', async ({
     backpackCartItem.locator('[data-test="inventory-item-price"]'),
   ).toHaveText(backpackPrice);
   await expect(page).toHaveURL('/cart.html');
-  await page
-    .getByRole('button', {
-      name: 'checkout',
-    })
-    .click();
+  await cartPage.checkout();
   await expect(page).toHaveURL('/checkout-step-one.html');
-  await page.getByPlaceholder('First Name').fill(customer.firstName);
-  await page.getByPlaceholder('Last Name').fill(customer.lastName);
-  await page.getByPlaceholder('Zip/Postal Code').fill(customer.postalCode);
-  await page
-    .getByRole('button', {
-      name: 'continue',
-    })
-    .click();
+  await checkout.fillCustomerInformation(customer);
+  await checkout.continueToOverview();
   await expect(page).toHaveURL('/checkout-step-two.html');
-  await expect(page.locator('[data-test="item-quantity"]')).toHaveText('1');
-  await expect(page.locator('[data-test="inventory-item-price"]')).toHaveText(
-    backpackPrice,
-  );
-  await expect(page.locator('[data-test="inventory-item"]')).toHaveCount(1);
-  await expect(page.locator('[data-test="inventory-item-name"]')).toHaveText(
-    products.backpack.name,
-  );
-  const subtotalText = await page
-    .locator('[data-test="subtotal-label"]')
-    .innerText();
-  const taxText = await page.locator('[data-test="tax-label"]').innerText();
-  const totalText = await page.locator('[data-test="total-label"]').innerText();
+  await expect(overview.productRows).toHaveCount(1);
+  await expect(
+    overview.productRows.locator('[data-test="item-quantity"]'),
+  ).toHaveText('1');
+  await expect(
+    overview.productRows.locator('[data-test="inventory-item-price"]'),
+  ).toHaveText(backpackPrice);
+  await expect(
+    overview.productRows.locator('[data-test="inventory-item-name"]'),
+  ).toHaveText(products.backpack.name);
+
+  const subtotalText = await overview.subtotal.innerText();
+  const taxText = await overview.tax.innerText();
+  const totalText = await overview.total.innerText();
 
   const subtotalCents = parseMoneyToCents(subtotalText);
   const taxCents = parseMoneyToCents(taxText);
@@ -71,40 +65,19 @@ test('CHECKOUT-001 — Complete checkout with one product', async ({
   expect(subtotalCents).toBe(parseMoneyToCents(backpackPrice));
   expect(totalCents).toBe(subtotalCents + taxCents);
 
-  await expect(
-    page.getByText('Payment Information:', { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText('SauceCard #31337', { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText('Shipping Information:', { exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText('Free Pony Express Delivery!', { exact: true }),
-  ).toBeVisible();
-
-  await expect(page).toHaveURL('/checkout-step-two.html');
-  await expect(
-    page.getByRole('heading', {
-      name: 'Thank you for your order!',
-      exact: true,
-    }),
-  ).toHaveCount(0);
-  await page
-    .getByRole('button', {
-      name: 'finish',
-    })
-    .click();
+  await expect(overview.paymentLabel).toBeVisible();
+  await expect(overview.paymentInformation).toHaveText('SauceCard #31337');
+  await expect(overview.shippingLabel).toBeVisible();
+  await expect(overview.shippingInformation).toHaveText(
+    'Free Pony Express Delivery!',
+  );
+  await expect(complete.orderHeading).toHaveCount(0);
+  await overview.finish();
   await expect(page).toHaveURL('/checkout-complete.html');
-  await expect(
-    page.getByRole('heading', {
-      name: 'Thank you for your order!',
-      exact: true,
-    }),
-  ).toBeVisible();
+  await expect(complete.orderHeading).toBeVisible();
+  await expect(complete.orderHeading).toHaveText('Thank you for your order!');
   await expect(header.cartBadge).toHaveCount(0);
-  await page.getByRole('button', { name: 'back home' }).click();
+  await complete.backHome();
   await expect(page).toHaveURL('/inventory.html');
   await header.openCart();
   await expect(page).toHaveURL('/cart.html');
