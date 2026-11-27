@@ -32,4 +32,12 @@ export class CheckoutInformationPage {
   async continueToOverview() {
     await this.page.getByRole('button', { name: 'continue' }).click();
   }
+
+  async cancel() {
+    await this.page
+      .getByRole('button', {
+        name: 'Cancel',
+      })
+      .click();
+  }
 }

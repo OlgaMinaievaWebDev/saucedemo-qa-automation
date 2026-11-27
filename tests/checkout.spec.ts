@@ -115,7 +115,6 @@ test('CHECKOUT-001, Complete checkout with one product', async ({
   await expect(page.locator('[data-test="inventory-item"]')).toHaveCount(0);
 });
 
-
 test('CHECKOUT-003, Submit without a first name, then correct it', async ({
   page,
   inventoryPage,
@@ -176,3 +175,78 @@ for (const validationCase of validationCases) {
     await expect(header.cartBadge).toHaveText('1');
   });
 }
+
+test('CHECKOUT-006,Review two products and verify order arithmetic', async ({
+  page,
+  inventoryPage,
+  header,
+  checkout,
+  cartPage,
+  overview,
+}) => {
+  await inventoryPage.addProductToCart(products.backpack.name);
+  await inventoryPage.addProductToCart(products.bikeLight.name);
+  const backpackPrice = await inventoryPage.getProductPrice(
+    products.backpack.name,
+  );
+  const bikePrice = await inventoryPage.getProductPrice(
+    products.bikeLight.name,
+  );
+  await header.openCart();
+  await cartPage.checkout();
+  await checkout.fillCustomerInformation(customer);
+  await checkout.continueToOverview();
+  await expect(overview.productRows).toHaveCount(2);
+  await expect(
+    overview.productRows.locator('[data-test="item-quantity"]'),
+  ).toHaveText(['1', '1']);
+
+  const subtotalCents = parseMoneyToCents(await overview.subtotal.innerText());
+  const taxCents = parseMoneyToCents(await overview.tax.innerText());
+  const totalCents = parseMoneyToCents(await overview.total.innerText());
+
+  const expectedSubtotalCents =
+    parseMoneyToCents(backpackPrice) + parseMoneyToCents(bikePrice);
+
+  expect(subtotalCents).toBe(expectedSubtotalCents);
+  expect(totalCents).toBe(subtotalCents + taxCents);
+
+  const backpackRow = overview.getProductRow(products.backpack.name);
+  await expect(
+    backpackRow.locator('[data-test="inventory-item-name"]'),
+  ).toHaveText(products.backpack.name);
+  await expect(
+    backpackRow.locator('[data-test="inventory-item-price"]'),
+  ).toHaveText(backpackPrice);
+
+  const bikeRow = overview.getProductRow(products.bikeLight.name);
+  await expect(bikeRow.locator('[data-test="inventory-item-name"]')).toHaveText(
+    products.bikeLight.name,
+  );
+  await expect(
+    bikeRow.locator('[data-test="inventory-item-price"]'),
+  ).toHaveText(bikePrice);
+});
+
+test('CHECKOUT-007,Cancel checkout from the information page', async ({
+  page,
+  inventoryPage,
+  header,
+  cartPage,
+  checkout,
+  complete,
+}) => {
+  await inventoryPage.addProductToCart(products.backpack.name);
+  await header.openCart();
+  await cartPage.checkout();
+  await expect(page).toHaveURL('/checkout-step-one.html');
+  await checkout.cancel();
+  await expect(page).toHaveURL('/cart.html');
+  await expect(page.locator('[data-test="inventory-item"]')).toHaveCount(1);
+  await expect(page.locator('[data-test="item-quantity"]')).toHaveText('1');
+  await expect(page.locator('[data-test="inventory-item-name"]')).toHaveText(
+    products.backpack.name,
+  );
+  await expect(header.cartBadge).toHaveText('1');
+  await expect(complete.orderHeading).not.toBeVisible();
+});

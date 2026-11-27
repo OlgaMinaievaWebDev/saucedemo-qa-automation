@@ -20,10 +20,16 @@ export class CheckoutOverviewPage {
     this.paymentLabel = page.locator('[data-test="payment-info-label"]');
     this.paymentInformation = page.locator('[data-test="payment-info-value"]');
     this.shippingLabel = page.locator('[data-test="shipping-info-label"]');
-    this.shippingInformation = page.locator('[data-test="shipping-info-value"]');
+    this.shippingInformation = page.locator(
+      '[data-test="shipping-info-value"]',
+    );
   }
 
   async finish(): Promise<void> {
     await this.finishButton.click();
+  }
+
+  getProductRow(productName: string): Locator {
+    return this.productRows.filter({ hasText: productName });
   }
 }
