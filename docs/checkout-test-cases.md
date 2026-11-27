@@ -1,6 +1,6 @@
 # SauceDemo checkout test cases
 
-This plan contains seven cases. CHECKOUT-001–007 have passing automated coverage in Chromium. CHECKOUT-006 compares Overview prices against Products-page prices; the manual cart-price comparison remains a coverage gap. Product requirements were unavailable, so observed behavior is the regression baseline.
+This plan contains seven cases. CHECKOUT-001–007 have passing automated coverage in Chromium. Product requirements were unavailable, so observed behavior is the regression baseline.
 
 **Latest verified run** · November 26, 2026. All 18 project tests passed in Chromium, including five checkout cases. Browser version was not recorded. Automated runs use the shared [customer data](../test-data/customer.ts); the manual sample values below may differ. Execution status refers to the automated scenario, not a separate rerun with every literal manual value.
 
@@ -129,14 +129,14 @@ Use a fresh signed-in session and arrange cart contents independently for each c
 | 2 | Compare each Overview price with its recorded cart price. | Each product price matches its cart price. |
 | 3 | Add the two product prices and compare with Item total. Add displayed tax to Item total and compare with Total. | Item total equals the sum of product prices. Total equals Item total plus displayed tax, calculated to the displayed currency precision. No specific tax rate is assumed. Stop before Finish. |
 
-**Execution status** · Automated variant passed in Chromium, November 27, 2026. The manual cart-price comparison remains unverified.
+**Execution status** · Passed · automated Playwright execution in Chromium, November 27, 2026, including comparison with prices captured from the cart.
 
-**Actual result** · Overview contained exactly the Backpack and Bike Light with quantity 1 each. Both names and prices matched the Products page. Subtotal equaled the sum of both prices, and total equaled subtotal plus displayed tax using integer cents. Execution stopped before Finish.
+**Actual result** · Overview contained exactly the Backpack and Bike Light with quantity 1 each. Both product names were correct and each Overview price matched its recorded cart price. Subtotal equaled the sum of both prices, and total equaled subtotal plus displayed tax using integer cents. Execution stopped before Finish.
 
 **Automation note** · Parse the displayed currency amounts into integer cents before summing and comparing. Compare subtotal and total numerically in cents, rather than relying on exact equality of binary floating-point dollar calculations. Use the displayed tax amount without inventing a tax-rate rule.
 
 
-**Coverage note** · The automated test captures prices on Products. To cover manual step 2 exactly, also capture and compare prices from the cart.
+**Coverage note** · The automated test records each product’s price from its cart row before checkout, matching manual step 2.
 
 ## CHECKOUT-007 — Cancel checkout from the information page
 
@@ -163,4 +163,4 @@ Use a fresh signed-in session and arrange cart contents independently for each c
 - Confirm postal-code rules and tax calculation rules before adding format, length, or rate-specific assertions.
 - Cancellation to the cart and preservation of its item have been observed and automated; product requirements remain unavailable.
 - Empty-cart checkout is documented separately in [CART-008](cart-test-cases.md) and [BUG-001](bug-reports/BUG-001-empty-cart-checkout.md). Its expected business behavior remains unresolved.
-- All seven cases now have automated coverage. Complete CHECKOUT-006’s cart-price comparison to match its manual steps exactly. CHECKOUT-002, CHECKOUT-004, and CHECKOUT-005 use parameterized tests; CHECKOUT-003 stays separate for retention and recovery.
+- All seven cases now have automated coverage, including CHECKOUT-006’s cart-price comparison. CHECKOUT-002, CHECKOUT-004, and CHECKOUT-005 use parameterized tests; CHECKOUT-003 stays separate for retention and recovery.

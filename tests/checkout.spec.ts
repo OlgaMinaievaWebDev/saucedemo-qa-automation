@@ -186,13 +186,17 @@ test('CHECKOUT-006,Review two products and verify order arithmetic', async ({
 }) => {
   await inventoryPage.addProductToCart(products.backpack.name);
   await inventoryPage.addProductToCart(products.bikeLight.name);
-  const backpackPrice = await inventoryPage.getProductPrice(
-    products.backpack.name,
-  );
-  const bikePrice = await inventoryPage.getProductPrice(
-    products.bikeLight.name,
-  );
   await header.openCart();
+  await expect(page).toHaveURL('/cart.html');
+
+  const backpackPrice = await cartPage
+    .getCartItem(products.backpack.name)
+    .locator('[data-test="inventory-item-price"]')
+    .innerText();
+  const bikePrice = await cartPage
+    .getCartItem(products.bikeLight.name)
+    .locator('[data-test="inventory-item-price"]')
+    .innerText();
   await cartPage.checkout();
   await checkout.fillCustomerInformation(customer);
   await checkout.continueToOverview();
