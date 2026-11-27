@@ -1,8 +1,8 @@
 # SauceDemo QA Automation
 
-A QA portfolio project using **Playwright and TypeScript** to test [SauceDemo](https://www.saucedemo.com/), a public demo store. It combines exploratory testing, written test cases, and automated checks for login and the shopping cart.
+A QA portfolio project using **Playwright and TypeScript** to test [SauceDemo](https://www.saucedemo.com/), a public demo store. It combines exploratory testing, written test cases, and automated checks for login, the shopping cart, and checkout.
 
-**Latest local verification — November 21, 2026:** All **13 automated cases passed in Chromium**. TypeScript validation passed.
+**Latest local verification — November 27, 2026:** All **20 automated cases passed in Chromium**. TypeScript validation passed.
 
 ## What is tested
 
@@ -11,18 +11,21 @@ A QA portfolio project using **Playwright and TypeScript** to test [SauceDemo](h
 | Login | LOGIN-001–007 | Valid sign-in, incorrect password, locked-out user, empty fields, and dismissing an error. |
 | Cart | CART-001–005 | Adding one or two products, checking names, quantities and prices, removing products, and keeping cart contents while continuing shopping. |
 | Cart controls | CART-006 | Quantity display, absence of standard input fields, and add/remove controls across Products, Cart, and product details. |
+| Checkout | CHECKOUT-001–007 | Successful purchase, required-field validation, retained form values and recovery, two-product price and total checks, and cancellation. |
 
-The manual cart plan also includes cases that have not yet been automated. Checkout automation is planned.
+The suite contains **7 login, 6 cart, and 7 checkout cases**. Three checkout validation cases share a parameterized implementation and appear as separate tests in reports. The manual cart plan also includes cases that have not yet been automated.
 
 ## How the framework is organized
 
 - **Tests** keep each scenario's steps and expected results readable.
-- **Page objects** handle reusable actions on Products and Cart.
+- **Page objects** handle reusable actions on Products, Cart, and the three checkout stages.
 - **Header component** handles opening the cart and exposes the cart badge for assertions.
-- **Test data** stores the demo users and product names in one place.
+- **Custom fixtures** provide fresh page objects and the Header component for each test.
+- **Test data** stores demo users, product names, and fictional customer details in one place.
+- **Currency helper** parses displayed amounts into integer cents for price calculations.
 - **Login helper** shares the sign-in steps.
 
-Each test starts in a fresh browser context. Cart tests sign in before arranging their own cart contents, so they can run independently.
+Each test starts in a fresh browser context. Cart and checkout tests sign in before arranging their own cart contents, so they can run independently.
 
 ## Test design and findings
 
@@ -30,6 +33,7 @@ I used AI-assisted browser exploration with Codex and Playwright to investigate 
 
 - [Login test cases](docs/login-test-cases.md)
 - [Cart test cases and open requirements](docs/cart-test-cases.md)
+- [Checkout test cases and execution records](docs/checkout-test-cases.md)
 - [Potential defect — empty-cart checkout](docs/bug-reports/BUG-001-empty-cart-checkout.md)
 
 The empty-cart checkout report separates the tester's observation from a proposed requirement. The expected business rule still needs confirmation.
@@ -44,13 +48,14 @@ npx playwright install chromium
 npx playwright test
 ```
 
-The current configuration runs **Chromium only**, both locally and in GitHub Actions.
+The current configuration runs **Chromium only**, both locally and in GitHub Actions. The current complete suite has been verified in Chromium.
 
 | Task | Command |
 | --- | --- |
 | Run all tests | `npx playwright test` |
 | Run login tests | `npx playwright test tests/login.spec.ts` |
 | Run cart tests | `npx playwright test tests/cart.spec.ts` |
+| Run checkout tests | `npx playwright test tests/checkout.spec.ts` |
 | Watch the browser | `npx playwright test --headed` |
 | Check TypeScript | `npm run typecheck` |
 | Open the HTML report | `npx playwright show-report` |
@@ -63,10 +68,11 @@ The [workflow](.github/workflows/playwright.yml) runs on pushes and pull request
 
 | Location | Purpose |
 | --- | --- |
-| `tests/` | Login and cart scenarios |
-| `pages/` | InventoryPage and CartPage |
+| `tests/` | Login, cart, and checkout scenarios |
+| `pages/` | Products, cart, customer-information, Overview, and confirmation page objects |
 | `components/` | Shared HeaderComponent |
-| `helpers/` | Login helper |
-| `test-data/` | Demo users and products |
+| `fixtures/` | Test-scoped page-object and component fixtures |
+| `helpers/` | Login and currency-parsing helpers |
+| `test-data/` | Demo users, products, and fictional customer details |
 | `docs/` | Manual test cases and bug reports |
 | `playwright.config.ts` | Browser, base URL, reporting, and retry settings |
