@@ -6,6 +6,37 @@ import { products } from '../test-data/products';
 import { users } from '../test-data/users';
 import { customer } from '../test-data/customer';
 
+const validationCases = [
+  {
+    testId: 'CHECKOUT-002',
+    testDescription: 'Submit an entirely empty customer-information form',
+    customerInformation: {
+      firstName: '',
+      lastName: '',
+      postalCode: '',
+    },
+    validationError: 'Error: First Name is required',
+  },
+  {
+    testId: 'CHECKOUT-004',
+    testDescription: 'Submit without a last name',
+    customerInformation: {
+      ...customer,
+      lastName: '',
+    },
+    validationError: 'Error: Last Name is required',
+  },
+  {
+    testId: 'CHECKOUT-005',
+    testDescription: 'Submit without a postal code',
+    customerInformation: {
+      ...customer,
+      postalCode: '',
+    },
+    validationError: 'Error: Postal Code is required',
+  },
+];
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await loginHelper(page, users.standard.username, users.standard.password);
@@ -84,26 +115,6 @@ test('CHECKOUT-001, Complete checkout with one product', async ({
   await expect(page.locator('[data-test="inventory-item"]')).toHaveCount(0);
 });
 
-test('CHECKOUT-002, Submit an entirely empty customer-information form', async ({
-  page,
-  inventoryPage,
-  header,
-  cartPage,
-  checkout,
-}) => {
-  await inventoryPage.addProductToCart(products.backpack.name);
-  await header.openCart();
-  await expect(page).toHaveURL('/cart.html');
-  await cartPage.checkout();
-  await expect(page).toHaveURL('/checkout-step-one.html');
-  await checkout.continueToOverview();
-
-  await expect(checkout.errorMessage).toHaveText(
-    'Error: First Name is required',
-  );
-  await expect(page).toHaveURL('/checkout-step-one.html');
-  await expect(header.cartBadge).toHaveText('1');
-});
 
 test('CHECKOUT-003, Submit without a first name, then correct it', async ({
   page,
@@ -142,3 +153,26 @@ test('CHECKOUT-003, Submit without a first name, then correct it', async ({
     overview.productRows.locator('[data-test="item-quantity"]'),
   ).toHaveText('1');
 });
+
+for (const validationCase of validationCases) {
+  test(`${validationCase.testId},${validationCase.testDescription}`, async ({
+    page,
+    inventoryPage,
+    cartPage,
+    header,
+    checkout,
+  }) => {
+    await inventoryPage.addProductToCart(products.backpack.name);
+    await header.openCart();
+    await expect(page).toHaveURL('/cart.html');
+    await cartPage.checkout();
+    await expect(page).toHaveURL('/checkout-step-one.html');
+    await checkout.fillCustomerInformation(validationCase.customerInformation);
+    await checkout.continueToOverview();
+    await expect(checkout.errorMessage).toHaveText(
+      validationCase.validationError,
+    );
+    await expect(page).toHaveURL('/checkout-step-one.html');
+    await expect(header.cartBadge).toHaveText('1');
+  });
+}
